@@ -9,10 +9,13 @@ public class RoboScript : MonoBehaviour {
 	private Rigidbody2D body;
 
 	private float maxSpeed = 7;
+	private Vector3 startPosition;
 
 	private RobotState state;
 	private bool onFloor;
+	private int floorNum;
 	private bool rooted;
+	private GameObject win;
 
 	private enum RobotState {
 		Idle = 0,
@@ -27,8 +30,13 @@ public class RoboScript : MonoBehaviour {
 		animator = model.GetComponent<Animator>();
 		body = GetComponent<Rigidbody2D>();
 
+		win = GameObject.FindGameObjectWithTag("WinTrigger");
+
+		startPosition = transform.position;
+
 		state = RobotState.Idle;
 		onFloor = false;
+		floorNum = 0;
 	}
 
 	void Update() {
@@ -72,20 +80,29 @@ public class RoboScript : MonoBehaviour {
 
 		Camera.main.transform.position = new Vector3(this.transform.position.x, transform.transform.position.y + 2.5f, -10);
 
+		if ((win.transform.position - transform.position).magnitude < 2)
+			transform.position = startPosition;
+
+		if (transform.position.y < -6)
+			transform.position = startPosition;
+
 		prevPos = this.transform.position;
 	}
 
-	void OnCollisionEnter2D(Collision2D collision) {
-		if (collision.gameObject.tag == "Floor") {
+	void OnTriggerEnter2D(Collider2D other) {
+		if (other.gameObject.tag == "Floor") {
+			floorNum++;
 			onFloor = true;
 			if (state == RobotState.Jump)
 				SetState(RobotState.Idle);
 		}
 	}
 
-	void OnCollisionExit2D(Collision2D collision) {
-		if (collision.gameObject.tag == "Floor") {
-			onFloor = false;
+	void OnTriggerExit2D(Collider2D other) {
+		if (other.gameObject.tag == "Floor") {
+			floorNum--;
+			if (floorNum == 0)
+				onFloor = false;
 		}
 	}
 
@@ -102,7 +119,7 @@ public class RoboScript : MonoBehaviour {
 			yield return null;
 		rooted = false;
 		Vector3 vv = body.velocity;
-		vv.y = 10;
+		vv.y = 18;
 		body.velocity = vv;
 	}
 
