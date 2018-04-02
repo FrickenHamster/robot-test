@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RoboScript : MonoBehaviour {
 	private GameObject model;
@@ -80,11 +81,13 @@ public class RoboScript : MonoBehaviour {
 
 		Camera.main.transform.position = new Vector3(this.transform.position.x, transform.transform.position.y + 2.5f, -10);
 
-		if ((win.transform.position - transform.position).magnitude < 2)
-			transform.position = startPosition;
+		if ((win.transform.position - transform.position).magnitude < 2) {
+			win.GetComponent<Animator>().SetBool("param_idletowinpose", true);
+			GameController.Instance.WinScreen.SetActive(true);
+		}
 
 		if (transform.position.y < -6)
-			transform.position = startPosition;
+			GameController.Instance.LoseScreen.SetActive(true);
 
 		prevPos = this.transform.position;
 	}
@@ -125,7 +128,15 @@ public class RoboScript : MonoBehaviour {
 
 	private IEnumerator AttackCoroutine() {
 		rooted = true;
-		for (float i = 0; i < 1.4; i += Time.deltaTime)
+		for (float i = 0; i < 1.1; i += Time.deltaTime)
+			yield return null;
+		Collider2D[] colliders = Physics2D.OverlapBoxAll(new Vector2(transform.position.x + 1.5f, transform.position.y + 0.5f),
+			new Vector2(1.5f, 1), 0);
+		foreach (var col in colliders) {
+			if (col.gameObject.tag == "Enemy")
+				Destroy(col.gameObject);
+		}
+		for (float i = 0; i < .6; i += Time.deltaTime)
 			yield return null;
 		rooted = false;
 		SetState(RobotState.Idle);
